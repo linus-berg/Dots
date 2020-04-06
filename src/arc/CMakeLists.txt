@@ -3,19 +3,20 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
 find_package(Boost COMPONENTS system filesystem REQUIRED)
+find_package(LibArchive REQUIRED)
+find_package(OpenSSL REQUIRED)
 
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(${PROJECT_SOURCE_DIRS}/include)
 include_directories(${Boost_INCLUDE_DIRS})
-add_subdirectory(arc)
-add_subdirectory(encrypt)
+include_directories(${LibArchive_INCLUDE_DIRS})
 
 # Libs
 # add_subdirectory(example)
-add_executable(${PROJECT_NAME} main.cpp)
+add_library(arc main.cpp)
 target_link_libraries(
-  ${PROJECT_NAME}
-  ${Boost_LIBRARIES}
-  ${OpenSSL_LIBRARIES}
   arc
+  ${Boost_LIBRARIES}
+  ${LibArchive_LIBRARIES}
+  enc
   pthread
 )

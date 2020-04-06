@@ -1,10 +1,15 @@
-cmake_minimum_required (VERSION 2.6)
-
-project(EXAMPLE)
-#enable_testing()
+cmake_minimum_required (VERSION 2.8)
 
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS "ON")
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+
+project(EXAMPLE)
+#enable_testing()
 
 add_definitions(-DCMAKE_EXPORT_COMPILE_COMMANDS=ON)
 add_subdirectory(src)
