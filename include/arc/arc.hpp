@@ -20,19 +20,14 @@ class Meta {
 class Archive {
   public: 
   static const int BUFFER_SIZE = 8192;
-  Archive(std::string name) {
-    /* A 256 bit key */
-    std::string key = "01234567890123456789012345678901";
-    /* A 128 bit IV */
-    std::string iv = "0123456789012345";
-
+  Archive(std::string name, std::string key, std::string iv) {
     this->meta_.crypto = new Crypto(key, iv);  
     this->archive_name_ = name; 
     this->meta_.name = name;
     this->Init();
   }
 
-  void AddFile(boost::filesystem::path p);
+  void AddFile(boost::filesystem::path base, boost::filesystem::path p);
   void Close();
   
   private:

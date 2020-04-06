@@ -49,12 +49,13 @@ int main() {
     return 1;
   }
 
-  Archive arc(cfg["OUTPUT"]);
+  Archive arc(cfg["OUTPUT"], cfg["KEY"], cfg["IV"]);
+
   for (std::set<boost::filesystem::path>::iterator dot = dots.begin(); dot != dots.end(); ++dot) {
     boost::filesystem::recursive_directory_iterator it(dots_path / *dot);
     for (; it != end_itr; ++it) {
       if (boost::filesystem::is_regular_file(*it)) {
-        arc.AddFile(boost::filesystem::relative(*it, dots_path));
+        arc.AddFile(dots_path, *it);
         std::cout << "Encrypting: " << *it << std::endl;
       }
     }

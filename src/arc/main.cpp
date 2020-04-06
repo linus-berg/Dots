@@ -37,7 +37,7 @@ void Archive::Init() {
   archive_write_open(this->arc_, &(this->meta_), open_cb, write_cb, close_cb);
 }
 
-void Archive::AddFile(boost::filesystem::path p) {
+void Archive::AddFile(boost::filesystem::path base, boost::filesystem::path p) {
   this->entry_ = archive_entry_new();
   boost::filesystem::ifstream in;
   in.open(p);
@@ -46,7 +46,8 @@ void Archive::AddFile(boost::filesystem::path p) {
   }
 
   /* Write File Metadata */
-  archive_entry_set_pathname(this->entry_, p.string().c_str());
+  boost::filesystem::path tar_path = boost::filesystem::relative(p, base);
+  archive_entry_set_pathname(this->entry_, tar_path.string().c_str());
   archive_entry_set_size(this->entry_, boost::filesystem::file_size(p));
   archive_entry_set_filetype(this->entry_, S_IFREG);
   archive_entry_set_perm(this->entry_, 0664);
