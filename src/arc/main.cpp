@@ -32,7 +32,7 @@ int close_cb(struct archive *a, void *meta) {
 
 void Archive::Init() {
   this->arc_ = archive_write_new(); 
-  //archive_write_add_filter_gzip(this->arc_);
+  archive_write_add_filter_gzip(this->arc_);
   archive_write_set_format_gnutar(this->arc_);
   archive_write_open(this->arc_, &(this->meta_), open_cb, write_cb, close_cb);
 }

@@ -8,44 +8,54 @@
 
 int main() {
   /* iterate recursively */
-  std::string USR_HOME = getenv ("HOME");
+  std::string USR_HOME = getenv("HOME");
   
   std::set<boost::filesystem::path> dots;
   boost::filesystem::recursive_directory_iterator end_itr;
-  boost::filesystem::ifstream config;
+  boost::filesystem::ifstream config_file;
+  /* Base Paths */
+  boost::filesystem::path config_path(USR_HOME + "/Development/IBM/Dots/build");
+  boost::filesystem::path dots_path(USR_HOME + "/Development/IBM/Dots/build");
   
-  boost::filesystem::path p(USR_HOME + "/Development/IBM/Dots/build");
+  /* Default config values */
   std::map<std::string, std::string> cfg;
   cfg["OUTPUT"] = "dots.encrypted";
-  std::string line; 
+  cfg["KEY"] = "";
+  cfg["IV"] = "";
   
-  config.open(p / ".dot");
-  while(getline(config, line)) {
+  std::string line; 
+  config_file.open(config_path / ".dot");
+  while(getline(config_file, line) && config_file.is_open()) {
     if (line[0] == '+') {
-      std::vector<std::string> split;
-      std::string lin2 = line.substr(1, line.length());
-      boost::algorithm::split(split, lin2, boost::is_any_of("="));
-      std::cout << split[0] << " = " << split[1] << std::endl;
-      cfg[split[0]] = split[1];
+      std::vector<std::string> opt;
+      std::string substring = line.substr(1, line.length());
+      boost::algorithm::split(opt, substring, boost::is_any_of("="));
+      cfg[opt[0]] = opt[1];
+      
+      std::cout << opt[0] << " = " << opt[1] << std::endl;
     } else {
-      boost::filesystem::path dot(p / line);
-      if (boost::filesystem::exists(dot)) {
+      boost::filesystem::path dot(line);
+      if (boost::filesystem::exists(dots_path / dot)) {
         dots.insert(dot); 
       } else {
         std::cerr << dot << " DOES NOT EXIST." << std::endl;
       }
     }
   }
+  config_file.close();
+
+  if (!cfg["KEY"].size() || !cfg["IV"].size()) {
+    std::cerr << "Please set Initialisation Vector and Key in .dot config." << std::endl;
+    return 1;
+  }
 
   Archive arc(cfg["OUTPUT"]);
-
-  for (std::set<boost::filesystem::path>::iterator it = dots.begin(); it != dots.end(); ++it) {
-    boost::filesystem::path c = *it;
-    for (boost::filesystem::recursive_directory_iterator it(c); it != end_itr; ++it) {
+  for (std::set<boost::filesystem::path>::iterator dot = dots.begin(); dot != dots.end(); ++dot) {
+    boost::filesystem::recursive_directory_iterator it(dots_path / *dot);
+    for (; it != end_itr; ++it) {
       if (boost::filesystem::is_regular_file(*it)) {
-        boost::filesystem::path file = it->path();
-        arc.AddFile(file);
-        std::cout << "Encrypting: " << file << std::endl;
+        arc.AddFile(boost::filesystem::relative(*it, dots_path));
+        std::cout << "Encrypting: " << *it << std::endl;
       }
     }
   }
