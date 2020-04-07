@@ -46,15 +46,24 @@ int main() {
     return 1;
   }
   
+  if (dots.size() <= 0)  {
+    std::cerr << "No files to package." << std::endl;
+    return 1;
+  } 
   Archive arc(cfg["OUTPUT"], cfg["PASSPHRASE"]);
 
   for (std::set<boost::filesystem::path>::iterator dot = dots.begin();
        dot != dots.end(); ++dot) {
-    boost::filesystem::recursive_directory_iterator it(dots_path / *dot);
-    for (; it != end_itr; ++it) {
-      if (boost::filesystem::is_regular_file(*it)) {
-        std::cout << "Encrypting: " << *it << std::endl;
-        arc.AddFile(dots_path, *it);
+    if (boost::filesystem::is_regular_file(*dot)) {
+      std::cout << "Encrypting: " << *dot << std::endl;
+      arc.AddFile(dots_path, *dot);
+    } else if (boost::filesystem::is_directory(*dot)) {
+      boost::filesystem::recursive_directory_iterator it(dots_path / *dot);
+      for (; it != end_itr; ++it) {
+        if (boost::filesystem::is_regular_file(*it)) {
+          std::cout << "Encrypting: " << *it << std::endl;
+          arc.AddFile(dots_path, *it);
+        }
       }
     }
   }
