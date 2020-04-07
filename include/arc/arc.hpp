@@ -16,9 +16,7 @@ struct Links {
 
   /* Out file handle */
   boost::filesystem::fstream out;
-  
   Crypto crypto;
-
   Links(std::string name, const char *passphrase): crypto(passphrase), archive_name(name) {}
 };
 

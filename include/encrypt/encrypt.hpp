@@ -7,7 +7,6 @@
 #include <openssl/kdf.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
-#include <openssl/params.h>
 #include <vector>
 
 class Crypto {

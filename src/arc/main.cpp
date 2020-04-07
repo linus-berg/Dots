@@ -17,7 +17,7 @@ int open_cb(struct archive *a, void *ln) {
 la_ssize_t write_cb(struct archive *a, void *ln, const void *buff, size_t n) {
   Links *loc = static_cast<Links *>(ln);
   /* Encrypt data before writing */
-  char crypto_buffer[n];
+  char crypto_buffer[n * 2];
   int enc_length = loc->crypto.Encrypt(buff, n, crypto_buffer);
   loc->out.write(crypto_buffer, enc_length);
   return enc_length;

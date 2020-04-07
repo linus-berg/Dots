@@ -53,8 +53,8 @@ int main() {
     boost::filesystem::recursive_directory_iterator it(dots_path / *dot);
     for (; it != end_itr; ++it) {
       if (boost::filesystem::is_regular_file(*it)) {
-        arc.AddFile(dots_path, *it);
         std::cout << "Encrypting: " << *it << std::endl;
+        arc.AddFile(dots_path, *it);
       }
     }
   }
