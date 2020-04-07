@@ -1,40 +1,46 @@
 #include <arc/arc.hpp>
 
 /* Archive callbacks, encrypt before writing */
-int open_cb(struct archive *a, void *meta) {
-  Meta *data = static_cast<Meta *>(meta);
-  data->out.open(data->name, boost::filesystem::fstream::out);
-  if	(data->out.is_open())
+int open_cb(struct archive *a, void *ln) {
+  /* Local cast of ln */
+  Links *loc = static_cast<Links *>(ln);
+  loc->out.open(loc->archive_name, boost::filesystem::fstream::out);
+  if	(loc->out.is_open()) {
+    loc->out.write("Salted__", 8);
+    loc->out.write(loc->crypto.GetSalt(), 8);
     return (ARCHIVE_OK);
-  else
+  } else {
     return (ARCHIVE_FATAL);
+  }
 }
 
-la_ssize_t write_cb(struct archive *a, void *meta, const void *buff, size_t n) {
-  Meta *data = static_cast<Meta *>(meta);
+la_ssize_t write_cb(struct archive *a, void *ln, const void *buff, size_t n) {
+  Links *loc = static_cast<Links *>(ln);
   /* Encrypt data before writing */
-  unsigned char crypto_buffer[n + Archive::BUFFER_SIZE];
-  int l = data->crypto->Encrypt((unsigned char *)buff, n, crypto_buffer);
-  data->out.write((const char *)crypto_buffer, l);
-  return l;
+  char crypto_buffer[n];
+  int enc_length = loc->crypto.Encrypt(buff, n, crypto_buffer);
+  loc->out.write(crypto_buffer, enc_length);
+  return enc_length;
 }
 
-int close_cb(struct archive *a, void *meta) {
-  Meta *data = static_cast<Meta *>(meta);
-  if	(data->out.is_open()) {
-    unsigned char pad[Archive::BUFFER_SIZE];
-    int l = data->crypto->End(pad);
-    data->out.write((const char*) pad, l);
-    data->out.close();
+int close_cb(struct archive *a, void *ln) {
+  Links *loc = static_cast<Links *>(ln);
+  if	(loc->out.is_open()) {
+    /* In case padding is needed */
+    char pad[1024];
+    int pad_length = loc->crypto.End(pad);
+    loc->out.write(pad, pad_length);
+    loc->out.close();
+    delete loc;
   }
   return (0);
 }
 
-void Archive::Init() {
+void Archive::Init(Links *ln) {
   this->arc_ = archive_write_new(); 
   archive_write_add_filter_gzip(this->arc_);
   archive_write_set_format_gnutar(this->arc_);
-  archive_write_open(this->arc_, &(this->meta_), open_cb, write_cb, close_cb);
+  archive_write_open(this->arc_, ln, open_cb, write_cb, close_cb);
 }
 
 void Archive::AddFile(boost::filesystem::path base, boost::filesystem::path p) {

@@ -4,7 +4,6 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 
 find_package(Boost COMPONENTS system filesystem REQUIRED)
 find_package(LibArchive REQUIRED)
-find_package(OpenSSL REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIRS}/include)
 include_directories(${Boost_INCLUDE_DIRS})

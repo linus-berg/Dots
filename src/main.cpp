@@ -8,7 +8,7 @@
 
 int main() {
   /* iterate recursively */
-  std::string USR_HOME = getenv("HOME");
+  std::string USR_HOME(getenv("HOME"));
   
   std::set<boost::filesystem::path> dots;
   boost::filesystem::recursive_directory_iterator end_itr;
@@ -20,8 +20,7 @@ int main() {
   /* Default config values */
   std::map<std::string, std::string> cfg;
   cfg["OUTPUT"] = "dots.encrypted";
-  cfg["KEY"] = "";
-  cfg["IV"] = "";
+  cfg["PASSPHRASE"] = "";
   
   std::string line; 
   config_file.open(config_path / ".dot");
@@ -31,8 +30,6 @@ int main() {
       std::string substring = line.substr(1, line.length());
       boost::algorithm::split(opt, substring, boost::is_any_of("="));
       cfg[opt[0]] = opt[1];
-      
-      std::cout << opt[0] << " = " << opt[1] << std::endl;
     } else {
       boost::filesystem::path dot(line);
       if (boost::filesystem::exists(dots_path / dot)) {
@@ -44,14 +41,15 @@ int main() {
   }
   config_file.close();
 
-  if (!cfg["KEY"].size() || !cfg["IV"].size()) {
-    std::cerr << "Please set Initialisation Vector and Key in .dot config." << std::endl;
+  if (!cfg["PASSPHRASE"].size()) {
+    std::cerr << "Please set passphrase in config." << std::endl;
     return 1;
   }
+  
+  Archive arc(cfg["OUTPUT"], cfg["PASSPHRASE"]);
 
-  Archive arc(cfg["OUTPUT"], cfg["KEY"], cfg["IV"]);
-
-  for (std::set<boost::filesystem::path>::iterator dot = dots.begin(); dot != dots.end(); ++dot) {
+  for (std::set<boost::filesystem::path>::iterator dot = dots.begin();
+       dot != dots.end(); ++dot) {
     boost::filesystem::recursive_directory_iterator it(dots_path / *dot);
     for (; it != end_itr; ++it) {
       if (boost::filesystem::is_regular_file(*it)) {
