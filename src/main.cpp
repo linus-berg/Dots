@@ -7,18 +7,15 @@
 #include <vector>
 
 int main() {
-  /* iterate recursively */
   std::string USR_HOME(getenv("HOME"));
   
   std::set<boost::filesystem::path> dots;
-  boost::filesystem::recursive_directory_iterator end_itr;
   boost::filesystem::ifstream cfg_istream;
   
   /* Base Paths */
   /* dots = dotfiles */
   boost::filesystem::path cfg_file(USR_HOME + "/Development/IBM/Dots/cfg/.dots");
   boost::filesystem::path dots_dir(USR_HOME + "/Development/IBM/Dots/build");
-  
   
   /* Default config values */
   std::map<std::string, std::string> cfg;
@@ -39,8 +36,8 @@ int main() {
 
       /* strncpy does not null-terminate */
       strncpy(opt, cfg_line_buffer + 1, sign_pos - 1);
-      opt[sign_pos - 1] = '\0';
       strcpy(val, cfg_line_buffer + (sign_pos + 1));
+      opt[sign_pos - 1] = '\0';
       cfg[opt] = val;
       if (!strcmp(opt, "BASE_DIR")) {
         if (val[0] == '~') {
@@ -65,16 +62,20 @@ int main() {
   if (!cfg["PASSPHRASE"].size()) {
     std::cerr << "Please set passphrase in config." << std::endl;
     return 1;
-  }
-  
-  if (dots.size() <= 0)  {
+  } else if (dots.size() <= 0)  {
     std::cerr << "No files to package." << std::endl;
     return 1;
-  } 
+  } else if (!cfg["BASE_DIR"].size()) {
+    std::cerr << "Please set passphrase in config." << std::endl;
+    return 1;
+  }
+  
+  /* Create archive with name OUTPUT and password PASSPHRASE */
   Archive arc(cfg["OUTPUT"], cfg["PASSPHRASE"]);
 
-  for (std::set<boost::filesystem::path>::iterator dot = dots.begin();
-       dot != dots.end(); ++dot) {
+  boost::filesystem::recursive_directory_iterator end_itr;
+  std::set<boost::filesystem::path>::iterator dot; 
+  for (dot = dots.begin(); dot != dots.end(); ++dot) {
     if (boost::filesystem::is_regular_file(*dot)) {
       std::cout << "Encrypting: " << *dot << std::endl;
       arc.AddFile(dots_dir, *dot);
