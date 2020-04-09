@@ -12,34 +12,55 @@ int main() {
   
   std::set<boost::filesystem::path> dots;
   boost::filesystem::recursive_directory_iterator end_itr;
-  boost::filesystem::ifstream config_file;
+  boost::filesystem::ifstream cfg_istream;
+  
   /* Base Paths */
-  boost::filesystem::path config_path(USR_HOME + "/Development/IBM/Dots/build");
-  boost::filesystem::path dots_path(USR_HOME + "/Development/IBM/Dots/build");
+  /* dots = dotfiles */
+  boost::filesystem::path cfg_file(USR_HOME + "/Development/IBM/Dots/cfg/.dots");
+  boost::filesystem::path dots_dir(USR_HOME + "/Development/IBM/Dots/build");
+  
   
   /* Default config values */
   std::map<std::string, std::string> cfg;
   cfg["OUTPUT"] = "dots.encrypted";
   cfg["PASSPHRASE"] = "";
-  
-  std::string line; 
-  config_file.open(config_path / ".dot");
-  while(getline(config_file, line) && config_file.is_open()) {
-    if (line[0] == '+') {
-      std::vector<std::string> opt;
-      std::string substring = line.substr(1, line.length());
-      boost::algorithm::split(opt, substring, boost::is_any_of("="));
-      cfg[opt[0]] = opt[1];
+  cfg["BASE_DIR"] = "";
+
+  /* cfg line buffer... */
+  char cfg_line_buffer[1024]; 
+  cfg_istream.open(cfg_file);
+  /* This could go wrong, I assume byte length < 1024 on each line. */
+  while(cfg_istream.getline(cfg_line_buffer, 1024) && cfg_istream.is_open()) {
+    if (cfg_line_buffer[0] == '+') {
+      char *res = strchr(cfg_line_buffer + 1, '=');
+      int sign_pos = res - cfg_line_buffer;
+      char opt[512];
+      char val[512];
+
+      /* strncpy does not null-terminate */
+      strncpy(opt, cfg_line_buffer + 1, sign_pos - 1);
+      opt[sign_pos - 1] = '\0';
+      strcpy(val, cfg_line_buffer + (sign_pos + 1));
+      cfg[opt] = val;
+      if (!strcmp(opt, "BASE_DIR")) {
+        if (val[0] == '~') {
+          dots_dir = USR_HOME;
+          dots_dir /= val + 1; 
+        } else {
+          dots_dir = val;
+        }
+      }
     } else {
-      boost::filesystem::path dot(line);
-      if (boost::filesystem::exists(dots_path / dot)) {
+      /* Assumes dot dir was setup previoulsy */
+      boost::filesystem::path dot(cfg_line_buffer);
+      if (boost::filesystem::exists(dots_dir / dot)) {
         dots.insert(dot); 
       } else {
         std::cerr << dot << " DOES NOT EXIST." << std::endl;
       }
     }
   }
-  config_file.close();
+  cfg_istream.close();
 
   if (!cfg["PASSPHRASE"].size()) {
     std::cerr << "Please set passphrase in config." << std::endl;
@@ -56,13 +77,13 @@ int main() {
        dot != dots.end(); ++dot) {
     if (boost::filesystem::is_regular_file(*dot)) {
       std::cout << "Encrypting: " << *dot << std::endl;
-      arc.AddFile(dots_path, *dot);
+      arc.AddFile(dots_dir, *dot);
     } else if (boost::filesystem::is_directory(*dot)) {
-      boost::filesystem::recursive_directory_iterator it(dots_path / *dot);
+      boost::filesystem::recursive_directory_iterator it(dots_dir / *dot);
       for (; it != end_itr; ++it) {
         if (boost::filesystem::is_regular_file(*it)) {
           std::cout << "Encrypting: " << *it << std::endl;
-          arc.AddFile(dots_path, *it);
+          arc.AddFile(dots_dir, *it);
         }
       }
     }
