@@ -6,8 +6,10 @@ find_package(Boost COMPONENTS system filesystem REQUIRED)
 
 include_directories(${PROJECT_SOURCE_DIR}/include)
 include_directories(${Boost_INCLUDE_DIRS})
+
 add_subdirectory(arc)
-add_subdirectory(encrypt)
+add_subdirectory(crypto)
+add_subdirectory(filemgr)
 
 # Libs
 # add_subdirectory(example)

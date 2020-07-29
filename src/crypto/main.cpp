@@ -1,4 +1,4 @@
-#include <encrypt/encrypt.hpp>
+#include <crypto.hpp>
 
 /* Takes arbitrary data input, outputs encrypted into out */
 int Crypto::Encrypt(const void *data, int n, void *out) {

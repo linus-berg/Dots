@@ -1,6 +1,6 @@
 #ifndef __ARC_H__
 #define __ARC_H__
-#include <encrypt/encrypt.hpp>
+#include <crypto.hpp>
 #include <archive.h>
 #include <archive_entry.h>
 #include <boost/filesystem.hpp>

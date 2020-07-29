@@ -1,4 +1,4 @@
-#include <arc/arc.hpp>
+#include <arc.hpp>
 
 /* Archive callbacks, encrypt before writing */
 int open_cb(struct archive *a, void *ln) {
